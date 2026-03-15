@@ -61,7 +61,8 @@ def interface_registrar(banco):
     novo_user = Usuario(usuario, cpf, data_nascimento)
     novo_id = banco.gerar_id()
     saldo_inicial = 0
-    nova_conta = Conta(novo_user,saldo_inicial, novo_id, senha_final)
+    poupança_inicial = 0
+    nova_conta = Conta(novo_user, saldo_inicial, poupança_inicial, novo_id, senha_final)
 
     banco.adicionar_conta(nova_conta)
     print(f"Conta criada com sucesso! ID:{novo_id}")
@@ -90,6 +91,27 @@ def logar_conta(banco):
             print("Senha incorreta!!")
     else:
         print("Usuário não encontrado.")
+
+def sacar_dinheiro_poupanca(conta_logada, banco):
+        try:
+            valor = float(input("Digite o valor para ser sacado: R$  "))
+            
+            if valor <= 0:
+                print("Valor inválido!")
+                return
+            
+            if valor > conta_logada['poupança']:
+                print("O valor digitado é superior ao valor depositado na conta!")
+                return
+
+            conta_logada['poupança'] -= valor
+            conta_logada['saldo'] += valor
+
+            banco.salvar_dados()
+            print("Valor sacado com sucesso!")
+        
+        except ValueError:
+            print("Digite um valor válido!")
 
 # USADO PARA SACAR UM DINHEIRO DO SALDO DA CONTA
 def sacar_dinheiro(conta_logada, banco):
@@ -154,8 +176,8 @@ def interface_conta(conta_logada, banco):
         elif resposta == '3':
             transferir_dinheiro(conta_logada, banco)
 
-        #elif resposta == '4':
-
+        elif resposta == '4':
+            interface_poupanca(conta_logada, banco)
         #elif resposta == '5':
 
         elif resposta == '6':
@@ -235,6 +257,51 @@ def transferir_via_cpf(conta_logada, banco):
                 print("Digite uma opção válida!")
                 return
 
+# FUNÇÃO FEITA PARA VISUALIZAR O SALDO QUE ESTÁ NA POUPANÇA DA CONTA LOGADA
+def visualizar_poupanca(conta_logada):
+    print('---Saldo---')
+    print(f"Saldo: R$ {conta_logada['poupança']}")
+    print("------")
+    input("Pressione ENTER para voltar ao menu")
+
+def guardar_dinheiro_poupança(conta_logada, banco):
+    print("-=-" *20)
+    print("---Deposito---")
+
+    valor = float(input("Digite o valor que deseja depositar em sua poupança: "))
+    verificacao = banco.depositar_poupança(conta_logada, valor)
+    if verificacao == False:
+        print("O valor digitado é maior que o saldo da conta, ou é inválido!")
+    elif verificacao == True:
+        print("Valor depositado em sua poupança com sucesso!!")
+
+# MENU DO SISTEMA DE POUPANÇA,
+def interface_poupanca(conta_logada, banco):
+    while True:
+        print("-=-" * 20)
+        print("---POUPANÇA---")
+
+        print('[1]- Abrir saldo da poupança')
+        print('[2]- Guardar dinheiro')
+        print('[3]- Sacar dinheiro')
+        print('[4]- Retornar')
+
+        resposta = input("Digite a opção que desejar: ")
+
+        if resposta == '1':
+            banco.calcular_juros(conta_logada)
+            visualizar_poupanca(conta_logada)
+        elif resposta == '2':
+            guardar_dinheiro_poupança(conta_logada, banco)
+        elif resposta == '3':
+            sacar_dinheiro_poupanca(conta_logada, banco)
+        elif resposta == '4':
+            print("Retornando ao menu...")
+            time.sleep(1.5)
+            break
+        else:
+            print("Opção inválida!")
+    
 # MENU PARA TRANSFERIR DINHEIRO DE UMA CONTA PARA OUTRA, COM A OPÇÃO DE CPF OU ID DA CONTA
 def transferir_dinheiro(conta_logada, banco):
     print("---MENU DE TRANSFERÊNCIA---")

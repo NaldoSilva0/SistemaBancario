@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 
 class Banco:
     def __init__(self, arquivo='dados.json'):
@@ -85,6 +86,35 @@ class Banco:
         self.salvar_dados()
         return True
     
+    def depositar_poupança(self, conta, valor):
+        self.conta = conta
+
+        if conta['saldo'] < valor:
+            return False
+        
+        conta['saldo'] -= valor
+        conta['poupança'] += valor
+
+        self.salvar_dados()
+        return True
+
+    def calcular_juros(self, conta):
+        data_agora = datetime.now()
+        ultimo_rendimento = datetime.fromisoformat(conta['ultimo_rendimento'])
+
+        diferenca = data_agora - ultimo_rendimento
+        minutos_passado = int(diferenca.total_seconds() // 60)
+
+        if minutos_passado >= 1:
+            taxa = 0.01
+            rendimento = conta['poupança'] * taxa * minutos_passado
+            conta['poupança'] = round(conta['poupança'] + rendimento, 2)
+
+            conta['ultimo_rendimento'] = data_agora.isoformat()
+            self.salvar_dados()
+            return True
+        return False
+
     def gerar_id(self):
         if not self.contas:
             return 1
