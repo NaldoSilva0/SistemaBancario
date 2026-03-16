@@ -92,6 +92,7 @@ def logar_conta(banco):
     else:
         print("Usuário não encontrado.")
 
+# SACA O DINHEIRO QUE ESTÁ NA POUPANÇA DA CONTA
 def sacar_dinheiro_poupanca(conta_logada, banco):
         try:
             valor = float(input("Digite o valor para ser sacado: R$  "))
@@ -104,8 +105,8 @@ def sacar_dinheiro_poupanca(conta_logada, banco):
                 print("O valor digitado é superior ao valor depositado na conta!")
                 return
 
-            conta_logada['poupança'] -= valor
-            conta_logada['saldo'] += valor
+            conta_logada['poupança'] = round(conta_logada['poupança'] - valor, 2)
+            conta_logada['saldo'] = round(conta_logada['saldo'] + valor, 2)
 
             banco.salvar_dados()
             print("Valor sacado com sucesso!")
@@ -178,15 +179,55 @@ def interface_conta(conta_logada, banco):
 
         elif resposta == '4':
             interface_poupanca(conta_logada, banco)
-        #elif resposta == '5':
+        elif resposta == '5':
+            informações_da_conta(conta_logada)
 
         elif resposta == '6':
             print("Saindo de sua conta...")
             time.sleep(1.5)
             break
 
-        #else:
-            #print("Opção inválida! digite algo válido.")
+        else:
+            print("Opção inválida! digite algo válido.")
+
+# INFORMAÇÕES DA CONTA LOGADA
+def informações_da_conta(conta_logada):
+    while True:
+        print("-=-"*20)
+        print("---INFORMAÇÕES---")
+        print("[1]-Visualizar dados cadastrais")
+        print("[2]-Mudar senha")
+        print('[3]-Registro de entrada')
+        print("[4]-Voltar")
+
+        resposta = input("Digite a opção que desejar: ")
+
+        if resposta == '1':
+            informações_cadastrais(conta_logada)
+        elif resposta == '2':
+            print("Senha")
+        elif resposta == '3':
+            print('Entrada')
+        elif resposta == '4':
+            print("Retornando ao menu...")
+            time.sleep(1.5)
+            break
+
+# EXIBIR AS INFORMAÇÕES DA CONTA
+def informações_cadastrais(conta_logada):
+    print("="*30)
+    print("     DETALHES DA CONTA:")
+    print("="*30)
+    print(f"Usuário: {conta_logada["usuario"]["nome"]}")
+    print(f"CPF: {conta_logada["usuario"]["cpf"]}")
+    print(f"Data nascimento: {conta_logada["usuario"]['data_nascimento']}")
+    print(f"id: {conta_logada["id"]}")
+    print("-"*30)
+    print(f"saldo CC: R${conta_logada["saldo"]}")
+    print(f"Saldo poupança: R${conta_logada["poupança"]}")
+    print("="*30)
+    input("Pressione ENTER para retornar ao menu...")
+
 
 # O USUÁRIO ESCREVE O ID DO DESTINATÁRIO, O SISTEMA VERIFICA SE EXISTE E MOSTRA O NOME DO USUÁRIO QUE ESTÁ VINCULADO AO ID, SE TUDO FOR CONFIRMADO, A TRANSFERÊNCIA É REALIZADA
 def transferir_via_id(conta_logada, banco):
@@ -264,6 +305,7 @@ def visualizar_poupanca(conta_logada):
     print("------")
     input("Pressione ENTER para voltar ao menu")
 
+# FUNÇÃO DE DEPOSITAR O DINHEIRO DA CONTA CORRENTE PARA A POUPANLA
 def guardar_dinheiro_poupança(conta_logada, banco):
     print("-=-" *20)
     print("---Deposito---")
