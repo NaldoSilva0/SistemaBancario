@@ -45,7 +45,6 @@ def repetir_senha():
             continue
         return senha
 
-
 # MENU PARA REGISTRAR UM USUÁRIO
 def interface_registrar(banco):
     print("---REGISTRAR CONTA---")
@@ -95,11 +94,12 @@ def interface_registrar(banco):
  
 
     novo_user = Usuario(usuario, cpf, data_nascimento)
+    senha_cripto = banco.criptografar_senha(senha_final)
     novo_id = banco.gerar_id()
     saldo_inicial = 0
     poupança_inicial = 0
     logs = []
-    nova_conta = Conta(novo_user, saldo_inicial, poupança_inicial, novo_id, senha_final, logs)
+    nova_conta = Conta(novo_user, saldo_inicial, poupança_inicial, novo_id, senha_cripto, logs)
 
     banco.adicionar_conta(nova_conta)
     print(f"Conta criada com sucesso! ID:{novo_id}")
@@ -118,8 +118,9 @@ def logar_conta(banco):
         return None
 
     senha_login = input("Digite sua senha: ")
+    senha_hash = banco.criptografar_senha(senha_login)
     if conta:
-        if conta['senha'] == senha_login:
+        if senha_hash == conta['senha']:
             banco.salvar_logs(conta, "Login realizado")
             print('-'*30)
             print(f"Login realizado! Seja bem vindo, {conta['usuario']['nome']}!")

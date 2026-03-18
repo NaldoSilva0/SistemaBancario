@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime, date
+import hashlib
 
 class Banco:
     def __init__(self, arquivo='dados.json'):
@@ -8,14 +9,16 @@ class Banco:
         self.contas = self.carregar_dados()
 # Carrega todos os dados dos usuários
     def carregar_dados(self):
-        if not os.path.exists(self.arquivo):
-            return []
         try:
-            with open(self.arquivo, 'r', encoding='utf-8') as arquivo:
+            with open(self.arquivo, "r", encoding='utf-8') as arquivo:
                 return json.load(arquivo)
-        except json.JSONDecodeError:
+        except FileNotFoundError:
+            print("O arquivo não encontrando! Estamos criando nesse exato momento!")
             return []
-
+        except json.JSONDecodeError:
+            print("Erro ao ler o arquivo! um possível corrompimento de arquivo...")
+            return []
+        
 # Salvar a hora e a data de login do usuário
     def salvar_logs(self, conta, mensagem):
         agora = datetime.now().strftime("%d/%m/%Y - %H:%M:%S")
@@ -32,6 +35,10 @@ class Banco:
     def adicionar_conta(self, nova_conta):
         self.contas.append(nova_conta.to_dict()) 
         self.salvar_dados()
+
+# Cripotografa a senha no arquivo json
+    def criptografar_senha(self, senha):
+        return hashlib.sha256(senha.encode()).hexdigest()
 
 # Verifica se o usuário existe nos dados
     def buscar_usuario(self, nome_digitado):
