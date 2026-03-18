@@ -1,26 +1,52 @@
 [
     {
         "id": 1,
-        "senha": "1",
-        "saldo": 3061.0,
-        "poupança": 0.24,
-        "usuario": {
-            "nome": "1",
-            "cpf": "111.111.111-11",
-            "data_nascimento": "11/11/1111"
-        },
-        "ultimo_rendimento": "2026-03-16T18:37:45.574107"
-    },
-    {
-        "id": 2,
-        "senha": "196582",
-        "saldo": 500.0,
-        "poupança": 500.0,
+        "senha": "196582Nld@",
+        "saldo": 310.0,
+        "poupança": 90.0,
         "usuario": {
             "nome": "Naldo",
             "cpf": "123.456.789-10",
             "data_nascimento": "22/09/2009"
         },
-        "ultimo_rendimento": "2026-03-16T18:56:46.100000"
+        "ultimo_rendimento": "2026-03-18T12:34:37.583711",
+        "logs": [
+            "Login realizado - Naldo - 18/03/2026 - 12:33:45",
+            "Depositou dinheiro - Naldo - 18/03/2026 - 12:33:58",
+            "Transferiu via ID - Naldo - 18/03/2026 - 12:34:17",
+            "Transferiu via CPF - Naldo - 18/03/2026 - 12:34:31",
+            "Depositou dinheiro na poupança - Naldo - 18/03/2026 - 12:34:41",
+            "Sacou dinheiro da poupança - Naldo - 18/03/2026 - 12:34:55",
+            "Login realizado - Naldo - 18/03/2026 - 12:38:47",
+            "Login realizado - Naldo - 18/03/2026 - 12:40:21",
+            "Alterou a senha - Naldo - 18/03/2026 - 12:40:49",
+            "Deslogou da conta - Naldo - 18/03/2026 - 12:41:03"
+        ]
+    },
+    {
+        "id": 2,
+        "senha": "123",
+        "saldo": 600.0,
+        "poupança": 0,
+        "usuario": {
+            "nome": "pedro",
+            "cpf": "111.111.111-11",
+            "data_nascimento": "22/09/2009"
+        },
+        "ultimo_rendimento": "2026-03-18T12:18:54.105010",
+        "logs": []
+    },
+    {
+        "id": 3,
+        "senha": "196582Nld%",
+        "saldo": 0,
+        "poupança": 0,
+        "usuario": {
+            "nome": "João",
+            "cpf": "222.222.222-22",
+            "data_nascimento": "22/09/2009"
+        },
+        "ultimo_rendimento": "2026-03-18T12:33:14.431678",
+        "logs": []
     }
 ]

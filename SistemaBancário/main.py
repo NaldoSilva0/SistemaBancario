@@ -3,6 +3,7 @@ from conta import Conta
 from persistencia import Banco
 import re
 import time
+from datetime import datetime
 
 
 banco = Banco()
@@ -26,19 +27,37 @@ def data_valida(data):
 
 # FUNÇÃO PARA VERIFICAR A SENHA E REPETIR
 def repetir_senha():
+    padrao = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+    
     while True:
-        senha = input('Digite a senha: ')
-        repSenha = input('Repita a senha: ')
+        print("\nSua senha deve ter no mínimo 8 caracteres, incluindo:")
+        print("Letra maiúscula, minúscula, número e caractere especial (@$!%*?&)")
 
-        if senha != repSenha:
-            print('As senha não são iguais, tente novamente')
+        senha = input('Digite a senha: ')
+        if not re.match(padrao, senha):
+            print("Os requisitos de senha não foram atendidos!")
+            continue
+        
+        repetir_senha = input("Repita a senha: ")
+        
+        if repetir_senha != senha:
+            print("As senhas não são iguais! tente novamente.")
             continue
         return senha
+
 
 # MENU PARA REGISTRAR UM USUÁRIO
 def interface_registrar(banco):
     print("---REGISTRAR CONTA---")
-    usuario = input("Digite seu nome de usuário: ")
+    while True: 
+        usuario = input("Digite seu nome de usuário: ").strip()
+        if len(usuario) >= 3 and usuario.replace(" ", "").isalpha():
+            break
+        else:
+            print("Nome inválido! Use somente letras e use no mínimo 3 caracteres")
+            return
+
+
     if banco.buscar_usuario(usuario):
         print("Erro: Esse usuário já está em uso, tente novamente com outro usuário")
         return
@@ -46,23 +65,41 @@ def interface_registrar(banco):
     
     while True:
         cpf = input("Digite seu CPF (XXX.XXX.XXX-XX): ")
-        if cpf_valido(cpf):
+        valido = cpf_valido(cpf)
+        if valido == False:
+            print("Formato inválido! use xxx.xxx.xxx-xx")
+            continue
+        
+        verificar = banco.cpf_em_uso(cpf, banco.contas)
+        if verificar == True:
+            print("Esse cpf já está vinculado em uma conta!")
+            continue
+        else:
             break
-        print("formato inválido! use xxx.xxx.xxx-xx")
+           
 
     while True:
         data_nascimento = input("Digite sua data de nascimento (DD/MM/AAAA): ")
-        if data_valida(data_nascimento):
-            break
-        print("formato inválido! use DD/MM/AAAA")
+        
+        try: 
 
-    
+            data_obj = datetime.strptime(data_nascimento, "%d/%m/%Y")
+            ano_atual = datetime.now().year
+            if 1941 <= data_obj.year <= ano_atual:
+                break
+            else:
+                print("Data de nascimento fora do aceitável")
+
+        except ValueError:
+            print("Data inválida, Digite no formato correto DD/MM/AAAA")
+ 
 
     novo_user = Usuario(usuario, cpf, data_nascimento)
     novo_id = banco.gerar_id()
     saldo_inicial = 0
     poupança_inicial = 0
-    nova_conta = Conta(novo_user, saldo_inicial, poupança_inicial, novo_id, senha_final)
+    logs = []
+    nova_conta = Conta(novo_user, saldo_inicial, poupança_inicial, novo_id, senha_final, logs)
 
     banco.adicionar_conta(nova_conta)
     print(f"Conta criada com sucesso! ID:{novo_id}")
@@ -73,9 +110,9 @@ def logar_conta(banco):
     print("---MENU DE LOGIN---")
     
 
-    usuario_login = input("Digite seu usuário: ")
+    usuario_login = input("Digite seu usuário ou seu cpf: ")
 
-    conta = banco.buscar_usuario(usuario_login)
+    conta = banco.buscar_usuario(usuario_login) or banco.buscar_usuario_por_cpf(usuario_login)
     if not conta:
         print("Essa conta não está cadastrada.")
         return None
@@ -83,7 +120,9 @@ def logar_conta(banco):
     senha_login = input("Digite sua senha: ")
     if conta:
         if conta['senha'] == senha_login:
-            print(f"Login realizado! Seja bem vindo, {usuario_login}!")
+            banco.salvar_logs(conta, "Login realizado")
+            print('-'*30)
+            print(f"Login realizado! Seja bem vindo, {conta['usuario']['nome']}!")
             interface_conta(conta, banco)
             return conta
 
@@ -109,6 +148,7 @@ def sacar_dinheiro_poupanca(conta_logada, banco):
             conta_logada['saldo'] = round(conta_logada['saldo'] + valor, 2)
 
             banco.salvar_dados()
+            banco.salvar_logs(conta_logada, "Sacou dinheiro da poupança")
             print("Valor sacado com sucesso!")
         
         except ValueError:
@@ -130,6 +170,7 @@ def sacar_dinheiro(conta_logada, banco):
         conta_logada['saldo'] -= valor
 
         banco.salvar_dados()
+        banco.salvar_logs(conta_logada, "Sacou dinheiro")
         print("Valor sacado com sucesso!")
     
     except ValueError:
@@ -146,6 +187,7 @@ def depositar_dinheiro(conta_logada, banco):
         conta_logada['saldo'] += valor
 
         banco.salvar_dados()
+        banco.salvar_logs(conta_logada, "Depositou dinheiro")
         print("Valor depositado em sua conta!")
 
 # MENU QUE ABRE APÓS VOCÊ COMPLETAR O LOGIN
@@ -179,10 +221,12 @@ def interface_conta(conta_logada, banco):
 
         elif resposta == '4':
             interface_poupanca(conta_logada, banco)
+
         elif resposta == '5':
             informações_da_conta(conta_logada)
 
         elif resposta == '6':
+            banco.salvar_logs(conta_logada, "Deslogou da conta")
             print("Saindo de sua conta...")
             time.sleep(1.5)
             break
@@ -205,15 +249,15 @@ def informações_da_conta(conta_logada):
         if resposta == '1':
             informações_cadastrais(conta_logada)
         elif resposta == '2':
-            print("Senha")
+            trocar_senha(conta_logada, banco)
         elif resposta == '3':
-            print('Entrada')
+            registro_entrada(conta_logada)
         elif resposta == '4':
             print("Retornando ao menu...")
             time.sleep(1.5)
             break
 
-# EXIBIR AS INFORMAÇÕES DA CONTA
+# EXIBIR AS INFORMAÇÕES DA CONTA (cpf, id, etc)
 def informações_cadastrais(conta_logada):
     print("="*30)
     print("     DETALHES DA CONTA:")
@@ -228,6 +272,42 @@ def informações_cadastrais(conta_logada):
     print("="*30)
     input("Pressione ENTER para retornar ao menu...")
 
+# EXIBI O REGISTRO DE ENTRADA DA CONTA LOGADA
+def registro_entrada(conta_logada):
+    print("\n"  + "=" *30)
+    print("    ---LOG DE ENTRADA---")
+    print("="*30)
+
+    if not conta_logada['logs']:
+        print("Informações não encontradas!")
+
+    for linha in conta_logada['logs']:
+        print(f"- {linha}\n")
+    print("-"*50)
+    input("Pressione ENTER para voltar ao menu")
+
+# USADO PARA TROCAR A SENHA ATUAL DA CONTA
+def trocar_senha(conta_logada, banco):
+    print("---Senha---")
+    continuar_parar = input("Você tem certeza que deseja trocar a senha atual? [S/N]: ").lower()
+    if continuar_parar == 'n':
+        print("Retornando ao menu...")
+        time.sleep(1.5)
+        return
+    elif continuar_parar == 's':
+        senha_final = input("Digite a senha atual de sua conta: ")
+        if senha_final != conta_logada['senha']:
+            print("Senha incorreta!")
+
+        else:
+            if conta_logada['senha'] == senha_final:
+                print("---NOVA SENHA---")
+                nova_senha = repetir_senha()
+
+                conta_logada['senha'] = nova_senha
+                banco.salvar_dados()
+                banco.salvar_logs(conta_logada, "Alterou a senha")
+                print("Senha alterada com sucesso!!")
 
 # O USUÁRIO ESCREVE O ID DO DESTINATÁRIO, O SISTEMA VERIFICA SE EXISTE E MOSTRA O NOME DO USUÁRIO QUE ESTÁ VINCULADO AO ID, SE TUDO FOR CONFIRMADO, A TRANSFERÊNCIA É REALIZADA
 def transferir_via_id(conta_logada, banco):
@@ -255,6 +335,7 @@ def transferir_via_id(conta_logada, banco):
             if transferir == False:
                 print("o saldo da transferência é maior que o saldo da conta")
             elif transferir == True:
+                banco.salvar_logs(conta_logada, "Transferiu via ID")
                 print("Transferência feita com sucesso!!")
                 return
             else:
@@ -292,6 +373,7 @@ def transferir_via_cpf(conta_logada, banco):
                 print("o saldo da transferência é maior que o saldo da conta")
 
             elif transferir == True:
+                banco.salvar_logs(conta_logada, "Transferiu via CPF")
                 print("Transferência feita com sucesso!!")
                 return
             else:
@@ -315,9 +397,10 @@ def guardar_dinheiro_poupança(conta_logada, banco):
     if verificacao == False:
         print("O valor digitado é maior que o saldo da conta, ou é inválido!")
     elif verificacao == True:
+        banco.salvar_logs(conta_logada, "Depositou dinheiro na poupança")
         print("Valor depositado em sua poupança com sucesso!!")
 
-# MENU DO SISTEMA DE POUPANÇA,
+# MENU DO SISTEMA DE POUPANÇA
 def interface_poupanca(conta_logada, banco):
     while True:
         print("-=-" * 20)
@@ -353,6 +436,7 @@ def transferir_dinheiro(conta_logada, banco):
 
     print("[1]-ID")
     print("[2]-CPF")
+    print("[3]- Voltar")
 
     resposta = input("DIgite a opção desejada: ")
 
@@ -360,8 +444,12 @@ def transferir_dinheiro(conta_logada, banco):
         transferir_via_id(conta_logada, banco)
     elif resposta == "2":
         transferir_via_cpf(conta_logada, banco)
+    elif resposta == '3':
+        print("Retornando ao menu...")
+        time.sleep(1.5)
+        return
     else:
-        print("Oção inválida!")
+        print("Opção inválida!")
 
 # MENU INICIAL DO CÓDIGO, TUDO FUNCIONA APARTIR DELE
 while True:

@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 class Banco:
     def __init__(self, arquivo='dados.json'):
@@ -15,6 +15,13 @@ class Banco:
                 return json.load(arquivo)
         except json.JSONDecodeError:
             return []
+
+# Salvar a hora e a data de login do usuário
+    def salvar_logs(self, conta, mensagem):
+        agora = datetime.now().strftime("%d/%m/%Y - %H:%M:%S")
+
+        conta['logs'].append(f'{mensagem} - {conta['usuario']['nome']} - {agora}')
+        self.salvar_dados()
 
 # Salva informações do usuário
     def salvar_dados(self):
@@ -33,6 +40,13 @@ class Banco:
                 return conta
         return None
 
+# Verificar se o cpf existe nos dados
+    def buscar_usuario_por_cpf(self, cpf_digitado):
+        for conta in self.contas:
+            if conta['usuario']['cpf'] == cpf_digitado:
+                return conta
+        return None
+
 # Busca a conta que eást vinculado ao id digitado
     def buscar_conta_id(self, id):
         for conta in self.contas:
@@ -45,6 +59,13 @@ class Banco:
         for conta in self.contas:
             if conta["usuario"]["cpf"] == cpf:
                 return conta
+        return None
+
+# Verificar se o cpf já está sendo usado
+    def cpf_em_uso(self, cpf, conta):
+        for conta in self.contas:
+            if conta['usuario']['cpf'] == cpf: 
+                return True
         return None
 
 # Busca a conta pelo cpf e retorna o nome do usuário
