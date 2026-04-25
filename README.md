@@ -1,4 +1,4 @@
-# 🏦 Sistema Bancário Pro - Python
+# 🏦 Sistema Bancário - Python
 
 Este é um sistema bancário robusto desenvolvido em Python, focado em **segurança de dados**, **persistência resiliente** e **lógica de negócios em tempo real**. O projeto simula as operações críticas de uma instituição financeira, desde o cadastro blindado de usuários até o rendimento automatizado de poupança.
 
